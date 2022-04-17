@@ -1,0 +1,98 @@
+import pygame as pg
+pg.init()
+
+class GameSprite(pg.sprite.Sprite):
+    def __init__(self, image, sprite_x, sprite_y, size_x, size_y, speed):
+        super().__init__()
+        self.image = pg.transform.scale(pg.image.load(image), (size_x, size_y))
+        self.rect = self.image.get_rect()
+        self.rect.x = sprite_x
+        self.rect.y = sprite_y
+        self.speed = speed
+
+    def draw(self):
+        window.blit(self.image, (self.rect.x, self.rect.y))
+
+#скорость мячика
+speed_x = 4
+speed_y = 4
+
+size_window = (700, 500)
+window = pg.display.set_mode(size_window)
+clock = pg.time.Clock()
+
+#ball = GameSprite('ball_png.png', 200, 200, 50, 50, 3)
+
+
+class Rocket(GameSprite):
+    def update1(self):
+        keys = pg.key.get_pressed()
+        if keys[pg.K_w] and self.rect.y >= 0:
+            self.rect.y -= self.speed
+        if keys[pg.K_s] and self.rect.y <= 350:
+            self.rect.y += self.speed
+    def update2(self):
+        keys = pg.key.get_pressed()
+        if keys[pg.K_UP] and self.rect.y >= 0:
+            self.rect.y -= self.speed
+        if keys[pg.K_DOWN] and self.rect.y <= 350:
+            self.rect.y += self.speed
+
+class Ball(GameSprite):
+    def update(self):
+        self.rect.x += speed_x
+        self.rect.y += speed_y
+
+#элементы
+player_1 = Rocket('rocket_png.png', 50, 250, 30, 100, 4)
+player_2 = Rocket('rocket_png.png', 650, 100, 30, 100, 4)
+ball = Ball('ball_png.png', 300, 200, 50, 50, 3)
+
+#текст победителя
+win_text = pg.font.Font(None, 36)
+winner1 = win_text.render('Игрок 1 победил!', 1, (180, 0, 0))
+winner2 = win_text.render('Игрок 2 победил!', 1, (180, 0, 0))
+
+game = True
+while game:
+    #отрисовка элементов
+    window.fill((200,200,255))
+
+    player_1.draw()
+    player_1.update1()
+    player_2.draw()
+    player_2.update2()
+
+    ball.draw()
+    ball.update()
+
+    #отскок сверху или снизу
+    if ball.rect.y >= 450:
+        speed_y *= -1
+    if ball.rect.y <= 0:
+        speed_y *= -1
+    
+    #осткок от платформ
+    if ball.rect.colliderect(player_1.rect) or ball.rect.colliderect(player_2.rect):
+        speed_x *= -1
+    
+    #победа и поражение
+    if ball.rect.x >= 650:
+        speed_x = 0
+        speed_y = 0
+        player_2.rect.x = -200
+        window.blit(winner1, (270, 250))
+
+    elif ball.rect.x <= 0:
+        speed_x = 0
+        speed_y = 0
+        player_1.rect.x = -200
+        window.blit(winner2, (270, 250))
+
+    #закрытие приложения
+    for e in pg.event.get():
+        if e.type==pg.QUIT:
+            game = False
+
+    pg.display.update()
+    clock.tick(60)
